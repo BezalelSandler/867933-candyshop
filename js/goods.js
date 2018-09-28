@@ -44,18 +44,20 @@
     }
   }
 
-  // алгоритм Луна
-  function luhn(cardNumber) {
-    var arr = cardNumber.split('').map(function (char, index) {
-      var digit = parseInt(char);
-      if ((index + cardNumber.length) % 2 === 0) {
-        var digitX2 = digit * 2;
-        return digitX2 > 9 ? digitX2 - 9 : digitX2;
-      }
-      return digit;
-    });
-    return !(arr.reduce(function (a, b) { return a + b }, 0) % 10);
-  }
+  // алгоритм Луна пока не используем
+  /*  function luhn(cardNumber) {
+      var arr = cardNumber.split('').map(function (char, index) {
+        var digit = parseInt(char);
+        if ((index + cardNumber.length) % 2 === 0) {
+          var digitX2 = digit * 2;
+          return digitX2 > 9 ? digitX2 - 9 : digitX2;
+        }
+        return digit;
+      });
+      return !(arr.reduce(function (a, b) {
+        return a + b;
+      }, 0) % 10);
+    }*/
 
   function generateMockObjects() {
     var arrGoods = [];
@@ -96,11 +98,15 @@
     products.forEach(function (item) {
       var amountClass = cardNode.querySelector('.catalog__card.card').classList;
       if (item.amount === 0) {
-        amountClass[2] === 'card--in-stock' ? amountClass.remove('card--in-stock') : false;
+        if (amountClass[2] === 'card--in-stock') {
+          amountClass.remove('card--in-stock');
+        }
         amountClass.add('card--soon');
       }
       if (item.amount > 0 && item.amount <= 5) {
-        amountClass[2] === 'card--in-stock' ? amountClass.remove('card--in-stock') : false;
+        if (amountClass[2] === 'card--in-stock') {
+          amountClass.remove('card--in-stock');
+        }
         amountClass.add('card--little');
       }
       cardNode.querySelector('article').setAttribute('data-productid', item.productId);
@@ -214,21 +220,6 @@
     }
   }
 
-  // start
-  /**
-   * Алгоритм добавления/удаления из корзины будет следующий:
-   * 1. у нас уже есть массив объектов товаров из мок объекта (в дальнейшем из json). Нужно добавить productId для манипуляций с объектами
-   * 2. при нажатии на добавить в корзину, функция будет проверять количество доступных товаров в соответствующем объекте списка товаров,
-   *   если есть, уменьшать на 1 и проверять наличие соответствующего товара в массиве объектов заказанных товаров, если есть, увеличивать на 1, если нет, копировать объект в массив заказанных товаров.
-   * 3. отрисовка оъектов (количества и если новый то добавление в дом нового объекта корзины)
-   */
-  var productsArray = generateMockObjects();
-  var productsOrderedArr = [];
-
-  renderCards(productsArray);
-  manageOrderForm();
-
-  // #16 Личный проект: подробности
   function checkPriceAndDecreaseAmount(id) {
     if (productsArray[id].amount > 0) {
       productsArray[id].amount--;
@@ -256,24 +247,6 @@
   buttonsFavorite.forEach(function (button) {
     button.addEventListener('click', function (evt) {
       evt.target.classList.toggle('card__btn-favorite--selected');
-    });
-  });
-
-  var buttonsOrder = document.querySelectorAll('.card__btn');
-  buttonsOrder.forEach(function (button) {
-    button.addEventListener('click', function (evt) {
-      // получаем дом объект нажатого товара и вытаскиваем id товара для поиска и манипуляций в js объектах
-      var targetProductId = evt.path[3].dataset.productid;
-      if (targetProductId) {
-        if (checkPriceAndDecreaseAmount(targetProductId)) {
-          // если есть в наличии
-          if (!checkAndInsertOrder(targetProductId)) {
-            // вывести алерт
-          }
-        } else {
-          alert('Эти вкусняшки кончились!');
-        }
-      }
     });
   });
 
@@ -313,18 +286,87 @@
   // работа с формой заказа
   function manageOrderForm() {
     var domOrderForm = document.querySelector('section.order');
-
-    // если переключились на наличные, блокируем инпуты кредитки
     domOrderForm.addEventListener('click', function (evt) {
-      console.log(evt);
-      if (evt.target.classList.contains('.toggle-btn__input')) {
+      var evtTarget = evt.target;
+      // если переключились на наличные, блокируем инпуты кредитки и обратно
+      if (evtTarget.getAttribute('id') === 'payment__card' || evtTarget.getAttribute('id') === 'payment__cash') {
+        var Card = {
+          Number: domOrderForm.querySelector('input[name=card-number]'),
+          Date: domOrderForm.querySelector('input[name=card-date]'),
+          Cvc: domOrderForm.querySelector('input[name=card-cvc]'),
+          Holder: domOrderForm.querySelector('input[name=cardholder]')
+        };
+        for (var field in Card) {
+          if (Card[field].disabled && !domOrderForm.querySelector('input#payment__cash').checked) {
+            Card[field].disabled = false;
+          } else if (domOrderForm.querySelector('input#payment__cash').checked) {
+            Card[field].disabled = true;
+          }
+        }
+      }
+      // переключатель табов доставки
+      if (evtTarget.getAttribute('id') === 'deliver__courier' || evtTarget.getAttribute('id') === 'deliver__store') {
+        var domDeliveryStore = domOrderForm.querySelector('.deliver__store');
+        var domDeliveryCourier = domOrderForm.querySelector('.deliver__courier');
+        var activeDeliveryTab = domOrderForm.querySelector('.' + evtTarget.getAttribute('id'));
+        if (activeDeliveryTab.isEqualNode(domDeliveryCourier)) {
+          domDeliveryStore.classList.add('visually-hidden');
+          domDeliveryCourier.classList.remove('visually-hidden');
+        } else {
+          domDeliveryStore.classList.remove('visually-hidden');
+          domDeliveryCourier.classList.add('visually-hidden');
+        }
       }
     });
   }
 
-  function validateOrderForm() {
-
+  function manageFilters() {
+    var totalVal = 245;
+    var rangeMouseFilter = document.querySelector('.range__filter');
+    var domFilterMin = rangeMouseFilter.querySelector('button.range__btn--left');
+    var domFilterMax = rangeMouseFilter.querySelector('button.range__btn--right');
+    rangeMouseFilter.addEventListener('mouseup', function (evt) {
+      var ratio = evt.offsetX / totalVal;
+      var res = ratio * 100;
+      domFilterMin.setAttribute('data-min', res);
+      domFilterMax.setAttribute('data-max', 100 - res);
+    });
   }
+
+  // start
+  /**
+   * Алгоритм добавления/удаления из корзины будет следующий:
+   * 1. у нас уже есть массив объектов товаров из мок объекта (в дальнейшем из json). Нужно добавить productId для манипуляций с объектами
+   * 2. при нажатии на добавить в корзину, функция будет проверять количество доступных товаров в соответствующем объекте списка товаров,
+   *   если есть, уменьшать на 1 и проверять наличие соответствующего товара в массиве объектов заказанных товаров, если есть, увеличивать на 1, если нет, копировать объект в массив заказанных товаров.
+   * 3. отрисовка оъектов (количества и если новый то добавление в дом нового объекта корзины)
+   */
+  var productsArray = generateMockObjects();
+  var productsOrderedArr = [];
+
+  renderCards(productsArray);
+
+  // эвенты добавть в корзину
+  var buttonsOrder = document.querySelectorAll('.card__btn');
+  buttonsOrder.forEach(function (button) {
+    button.addEventListener('click', function (evt) {
+      // получаем дом объект нажатого товара и вытаскиваем id товара для поиска и манипуляций в js объектах
+      var targetProductId = evt.path[3].dataset.productid;
+      if (targetProductId) {
+        if (checkPriceAndDecreaseAmount(targetProductId)) {
+          // если есть в наличии
+          if (!checkAndInsertOrder(targetProductId)) {
+            // вывести алерт
+          }
+        } else {
+          alert('Эти вкусняшки кончились!');
+        }
+      }
+    });
+  });
+
+  manageOrderForm();
+  manageFilters();
 
 
 })();
