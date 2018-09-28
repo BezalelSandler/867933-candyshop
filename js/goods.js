@@ -275,7 +275,7 @@
               productsOrderedArr[targetProductId].orderedAmount++;
               renderCardsCart(productsOrderedArr);
             } else {
-              alert('А попа не слипнится?) Усе закончилось.');
+              alert('А попа не слипнится?) Усе закончилось.'); // eslint-disable-line
             }
           }
         });
@@ -359,7 +359,7 @@
             // вывести алерт
           }
         } else {
-          alert('Эти вкусняшки кончились!');
+          alert('Эти вкусняшки кончились!'); // eslint-disable-line
         }
       }
     });
