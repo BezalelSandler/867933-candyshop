@@ -44,20 +44,20 @@
     }
   }
 
-  // алгоритм Луна пока не используем
-  /*  function luhn(cardNumber) {
-      var arr = cardNumber.split('').map(function (char, index) {
-        var digit = parseInt(char);
-        if ((index + cardNumber.length) % 2 === 0) {
-          var digitX2 = digit * 2;
-          return digitX2 > 9 ? digitX2 - 9 : digitX2;
-        }
-        return digit;
-      });
-      return !(arr.reduce(function (a, b) {
-        return a + b;
-      }, 0) % 10);
-    }*/
+  // алгоритм Луна
+  function luhn(cardNumber) {
+    var arr = cardNumber.split('').map(function (char, index) {
+      var digit = parseInt(char, 10);
+      if ((index + cardNumber.length) % 2 === 0) {
+        var digitX2 = digit * 2;
+        return digitX2 > 9 ? digitX2 - 9 : digitX2;
+      }
+      return digit;
+    });
+    return !(arr.reduce(function (a, b) {
+      return a + b;
+    }, 0) % 10);
+  }
 
   function generateMockObjects() {
     var arrGoods = [];
@@ -286,6 +286,7 @@
   // работа с формой заказа
   function manageOrderForm() {
     var domOrderForm = document.querySelector('section.order');
+    var domCashWrap = domOrderForm.querySelector('.payment__cash-wrap');
     domOrderForm.addEventListener('click', function (evt) {
       var evtTarget = evt.target;
       // если переключились на наличные, блокируем инпуты кредитки и обратно
@@ -299,8 +300,10 @@
         for (var field in Card) {
           if (Card[field].disabled && !domOrderForm.querySelector('input#payment__cash').checked) {
             Card[field].disabled = false;
+            domCashWrap.classList.add('visually-hidden');
           } else if (domOrderForm.querySelector('input#payment__cash').checked) {
             Card[field].disabled = true;
+            domCashWrap.classList.remove('visually-hidden');
           }
         }
       }
@@ -330,6 +333,33 @@
       var res = ratio * 100;
       domFilterMin.setAttribute('data-min', res);
       domFilterMax.setAttribute('data-max', 100 - res);
+    });
+  }
+
+  function validateOrderForm() {
+    var domOrderForm = document.querySelector('form[name=order]');
+    var domInputEmail = domOrderForm.querySelector('input[name=email]');
+    var domInputCardNumber = domOrderForm.querySelector('input[name=card-number]');
+    // var domButtonSubmit = domOrderForm.querySelector('button.buy__submit-btn');
+
+    domInputEmail.addEventListener('keyup', function () {
+      if (domInputEmail.value) {
+        domInputEmail.type = 'email';
+        domInputEmail.required = true;
+      } else {
+        domInputEmail.type = 'text';
+        domInputEmail.required = false;
+      }
+    });
+
+    domInputCardNumber.addEventListener('keyup', function () {
+      if (domInputCardNumber.value.length === 16) {
+        if (!luhn(domInputCardNumber.value)) {
+          domInputCardNumber.setCustomValidity('Неправильно указан номер карты');
+        }
+      } else {
+        domInputCardNumber.setCustomValidity('');
+      }
     });
   }
 
@@ -367,6 +397,6 @@
 
   manageOrderForm();
   manageFilters();
-
+  validateOrderForm();
 
 })();
