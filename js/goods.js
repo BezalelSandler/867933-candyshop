@@ -323,19 +323,6 @@
     });
   }
 
-  function manageFilters() {
-    var totalVal = 245;
-    var rangeMouseFilter = document.querySelector('.range__filter');
-    var domFilterMin = rangeMouseFilter.querySelector('button.range__btn--left');
-    var domFilterMax = rangeMouseFilter.querySelector('button.range__btn--right');
-    rangeMouseFilter.addEventListener('mouseup', function (evt) {
-      var ratio = evt.offsetX / totalVal;
-      var res = ratio * 100;
-      domFilterMin.setAttribute('data-min', res);
-      domFilterMax.setAttribute('data-max', 100 - res);
-    });
-  }
-
   function validateOrderForm() {
     var domOrderForm = document.querySelector('form[name=order]');
     var domInputEmail = domOrderForm.querySelector('input[name=email]');
@@ -396,7 +383,6 @@
   });
 
   manageOrderForm();
-  manageFilters();
   validateOrderForm();
 
 })();
