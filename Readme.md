@@ -1,7 +1,7 @@
 # Личный проект «Кэндишоп» [![Build status][travis-image]][travis-url]
 
 * Студент: [Петр Сандлер](https://up.htmlacademy.ru/javascript/15/user/867933).
-* Наставник: [Артем Карачев](https://htmlacademy.ru/profile/id818515).
+* Наставник: [Альбина Токарчук](https://htmlacademy.ru/profile/id167491).
 
 ---
 
