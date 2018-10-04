@@ -10,13 +10,13 @@
   var domPriceMax = document.querySelector('.range__price.range__price--max');
   var MAX_WIDTH = domRangeFilter.offsetWidth;
 
-  var onMouseDown = function (evtDown) {
+  function onMouseDown(evtDown) {
     var startCoord = {
       x: evtDown.clientX
     };
     var eventTarget = evtDown.target;
 
-    var onMouseMove = function (evt) {
+    function onMouseMove(evt) {
       evt.preventDefault();
       if (eventTarget === domFilterMin || eventTarget === domFilterMax) {
         var shift = {
@@ -42,19 +42,19 @@
           }
         }
       }
-    };
+    }
 
-    var onMouseUp = function (evt) {
+    function onMouseUp(evt) {
       evt.preventDefault();
 
       document.removeEventListener('mousemove', onMouseMove);
       document.removeEventListener('mouseup', onMouseUp);
-    };
+    }
 
     document.addEventListener('mousemove', onMouseMove);
     document.addEventListener('mouseup', onMouseUp);
 
-  };
+  }
 
   domFilterMin.addEventListener('mousedown', onMouseDown);
   domFilterMax.addEventListener('mousedown', onMouseDown);
