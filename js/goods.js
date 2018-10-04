@@ -4,6 +4,26 @@
 
   var MAX_GOODS = 26;
 
+  var domCatalogCards = document.querySelector('.catalog__cards');
+  var domCartCards = document.querySelector('.goods__cards');
+
+  var fragmentCardTemplate = document.querySelector('#card');
+  var fragmentCartTemplate = document.querySelector('#card-order');
+
+  var domHeaderBasket = document.querySelector('.main-header__basket');
+  var domOrderTotal = document.querySelector('.goods__total');
+  var domOrderTotalContent = domOrderTotal.querySelector('.goods__card-wrap .goods__total-count');
+
+  var domFormOrder = document.querySelector('form[name=order]');
+  var domSectionOrder = domFormOrder.querySelector('section.order');
+  var domCashWrap = domFormOrder.querySelector('.payment__cash-wrap');
+  var domCardWrap = domFormOrder.querySelector('.payment__card-wrap');
+  var domInputEmail = domFormOrder.querySelector('input[name=email]');
+  var domInputCardNumber = domFormOrder.querySelector('input[name=card-number]');
+  var domCardStatusMessage = domFormOrder.querySelector('.payment__card-status');
+
+  var domSubmitOrder = document.querySelector('.buy__submit-btn-wrap.container');
+
   var mockContainer = {
     name: ['Чесночные сливки', 'Огуречный педант', 'Молочная хрюша', 'Грибной шейк', 'Баклажановое безумие', 'Паприколу итальяно', 'Нинзя-удар васаби', 'Хитрый баклажан', 'Горчичный вызов', 'Кедровая липучка', 'Корманный портвейн', 'Чилийский задира', 'Беконовый взрыв', 'Арахис vs виноград', 'Сельдерейная душа', 'Початок в бутылке', 'Чернющий мистер чеснок', 'Раша федераша', 'Кислая мина', 'Кукурузное утро', 'Икорный фуршет', 'Новогоднее настроение', 'С пивком потянет', 'Мисс креветка', 'Бесконечный взрыв', 'Невинные винные', 'Бельгийское пенное', 'Острый язычок'
     ],
@@ -13,9 +33,7 @@
   };
 
   function getRandValue(min, max) {
-    var rand = min - 0.5 + Math.random() * (max - min + 1);
-    rand = Math.round(rand);
-    return rand;
+    return Math.round(min - 0.5 + Math.random() * (max - min + 1));
   }
 
   function getRandElement(arr) {
@@ -44,20 +62,23 @@
     }
   }
 
-  // алгоритм Луна пока не используем
-  /*  function luhn(cardNumber) {
-      var arr = cardNumber.split('').map(function (char, index) {
-        var digit = parseInt(char);
-        if ((index + cardNumber.length) % 2 === 0) {
-          var digitX2 = digit * 2;
-          return digitX2 > 9 ? digitX2 - 9 : digitX2;
-        }
-        return digit;
-      });
-      return !(arr.reduce(function (a, b) {
-        return a + b;
-      }, 0) % 10);
-    }*/
+  // алгоритм Луна
+  function luhnFilter(cardNumber) {
+    if (isNaN(cardNumber)) {
+      return false;
+    }
+    var arr = cardNumber.split('').map(function (char, index) {
+      var digit = parseInt(char, 10);
+      if ((index + cardNumber.length) % 2 === 0) {
+        var digitX2 = digit * 2;
+        return digitX2 > 9 ? digitX2 - 9 : digitX2;
+      }
+      return digit;
+    });
+    return !(arr.reduce(function (a, b) {
+      return a + b;
+    }, 0) % 10);
+  }
 
   function generateMockObjects() {
     var arrGoods = [];
@@ -84,14 +105,12 @@
   }
 
   function renderCards(products) {
-    var catalogCards = document.querySelector('.catalog__cards');
-    if (catalogCards) {
-      catalogCards.classList.remove('catalog__cards--load');
-      document.querySelector('.catalog__load').classList.add('visually-hidden');
+    if (domCatalogCards) {
+      domCatalogCards.classList.remove('catalog__cards--load');
+      domCatalogCards.querySelector('.catalog__load').classList.add('visually-hidden');
     }
 
-    var cardTemplate = document.querySelector('#card');
-    var cardNode = cardTemplate.content;
+    var cardNode = fragmentCardTemplate.content;
 
     var cardsListContainer = document.createDocumentFragment();
 
@@ -110,7 +129,7 @@
         amountClass.add('card--little');
       }
       cardNode.querySelector('article').setAttribute('data-productid', item.productId);
-      cardNode.querySelector('.card__title').innerText = item.name;
+      cardNode.querySelector('.card__title').textContent = item.name;
       cardNode.querySelector('.card__price').innerHTML = item.price + ' <span class="card__currency">₽</span><span class="card__weight">/ ' + item.weight + ' Г</span>';
       cardNode.querySelector('.card__img').src = 'img/cards/' + item.picture;
 
@@ -123,17 +142,17 @@
         case 4: ratingClass.add('stars__rating--four'); break;
         case 5: ratingClass.add('stars__rating--five'); break;
       }
-      cardNode.querySelector('.star__count').innerText = item.rating.number;
+      cardNode.querySelector('.star__count').textContent = item.rating.number;
 
       var sugarValue = cardNode.querySelector('.card__characteristic');
-      sugarValue.innerText = 'Без сахара';
+      sugarValue.textContent = 'Без сахара';
       if (item.nutritionFacts.sugar) {
-        sugarValue.innerText = 'Содержит сахар. ' + item.nutritionFacts.energy + ' ккал';
+        sugarValue.textContent = 'Содержит сахар. ' + item.nutritionFacts.energy + ' ккал';
       }
-      cardNode.querySelector('.card__composition-list').innerText = item.nutritionFacts.contents;
+      cardNode.querySelector('.card__composition-list').textContent = item.nutritionFacts.contents;
       cardsListContainer.appendChild(cardNode.cloneNode(true));
     });
-    document.querySelector('.catalog__cards').appendChild(cardsListContainer);
+    domCatalogCards.appendChild(cardsListContainer);
   }
 
   function renderCardsCart(productsOrdered) {
@@ -142,19 +161,13 @@
       return item.hasOwnProperty('name');
     });
     // в буфер скидываем заглушку т.к. далее все дети будут удалятся перед вставкой
-    var goodsCardsNode = document.querySelector('.goods__cards');
-    var bufferNodeEmpty = goodsCardsNode.querySelector('.goods__card-empty');
+    var bufferNodeEmpty = domCartCards.querySelector('.goods__card-empty');
     if (bufferNodeEmpty) {
       bufferNodeEmpty = bufferNodeEmpty.cloneNode(true);
     }
 
-    var strBasket = '';
-    var docHeaderBasket = document.querySelector('.main-header__basket');
-    var docOrderTotal = document.querySelector('.goods__card-wrap .goods__total-count');
-
     if (bufferArr.length > 0) {
-      var cartTemplate = document.querySelector('#card-order');
-      var cartNode = cartTemplate.content;
+      var cartNode = fragmentCartTemplate.content;
       var priceResult = 0;
       var countOrderedItems = 0;
 
@@ -162,9 +175,9 @@
 
       productsOrdered.forEach(function (item) {
         cartNode.querySelector('article').setAttribute('data-cartproductid', item.productId);
-        cartNode.querySelector('.card-order__title').innerText = item.name;
+        cartNode.querySelector('.card-order__title').textContent = item.name;
         cartNode.querySelector('.card-order__img').src = 'img/cards/' + item.picture;
-        cartNode.querySelector('.card-order__price').innerText = item.price + ' ₽';
+        cartNode.querySelector('.card-order__price').textContent = item.price + ' ₽';
         cartNode.querySelector('input[name=gum-wasabi]').value = item.orderedAmount;
         cartListContainer.appendChild(cartNode.cloneNode(true));
         // для подсчета в шапке
@@ -172,21 +185,21 @@
         countOrderedItems += item.orderedAmount;
       });
       // если уже есть объекты в корзине, удаляем при перерисовке, за исключением заглушки, заглушку в буфер
-      clearChildNodes(goodsCardsNode);
+      clearChildNodes(domCartCards);
       cartListContainer.appendChild(bufferNodeEmpty);
 
-      goodsCardsNode.appendChild(cartListContainer);
+      domCartCards.appendChild(cartListContainer);
 
       // манипуляции с классами
-      goodsCardsNode.classList.remove('goods__cards--empty');
-      goodsCardsNode.querySelector('.goods__card-empty').classList.add('visually-hidden');
-      document.querySelector('.goods__total').classList.remove('visually-hidden');
+      domCartCards.classList.remove('goods__cards--empty');
+      domCartCards.querySelector('.goods__card-empty').classList.add('visually-hidden');
+      domOrderTotal.classList.remove('visually-hidden');
       // убираем скрытие формы заказа, если она скрыта и кнопки отправки
-      if (document.querySelector('section.order').classList.contains('visually-hidden')) {
-        document.querySelector('section.order').classList.remove('visually-hidden');
+      if (domSectionOrder.classList.contains('visually-hidden')) {
+        domSectionOrder.classList.remove('visually-hidden');
       }
-      if (document.querySelector('.buy__submit-btn-wrap.container').classList.contains('visually-hidden')) {
-        document.querySelector('.buy__submit-btn-wrap.container').classList.remove('visually-hidden');
+      if (domSubmitOrder.classList.contains('visually-hidden')) {
+        domSubmitOrder.classList.remove('visually-hidden');
       }
 
       // функция управления элементами в корзине
@@ -194,29 +207,29 @@
 
     } else {
       // нет товаров в корзине, чистим дом и возвращаем заглушку
-      clearChildNodes(goodsCardsNode);
-      if (!goodsCardsNode.classList.contains('goods__cards--empty')) {
-        goodsCardsNode.classList.add('goods__cards--empty');
+      clearChildNodes(domCartCards);
+      if (!domCartCards.classList.contains('goods__cards--empty')) {
+        domCartCards.classList.add('goods__cards--empty');
       }
-      goodsCardsNode.appendChild(bufferNodeEmpty);
-      goodsCardsNode.querySelector('.goods__card-empty').classList.remove('visually-hidden');
-      document.querySelector('.goods__total').classList.add('visually-hidden');
+      domCartCards.appendChild(bufferNodeEmpty);
+      domCartCards.querySelector('.goods__card-empty').classList.remove('visually-hidden');
+      domOrderTotal.classList.add('visually-hidden');
       // добавляем скрытие формы заказа кнопки отправки
-      if (!document.querySelector('section.order').classList.contains('visually-hidden')) {
-        document.querySelector('section.order').classList.add('visually-hidden');
+      if (!domSectionOrder.classList.contains('visually-hidden')) {
+        domSectionOrder.classList.add('visually-hidden');
       }
-      if (!document.querySelector('.buy__submit-btn-wrap.container').classList.contains('visually-hidden')) {
-        document.querySelector('.buy__submit-btn-wrap.container').classList.add('visually-hidden');
+      if (!domSubmitOrder.classList.contains('visually-hidden')) {
+        domSubmitOrder.classList.add('visually-hidden');
       }
     }
     // добавляем в шапку и итоговую стоимость при оформлении
     if (priceResult) {
-      strBasket = 'В корзине ' + countOrderedItems + ' товар' + plural(countOrderedItems, ['', 'а', 'ов']) + ' на ' + priceResult + '₽';
-      docHeaderBasket.innerText = strBasket;
-      docOrderTotal.innerHTML = 'Итого за ' + countOrderedItems + ' товар' + plural(countOrderedItems, ['', 'а', 'ов']) + ': <span class="goods__price">' + priceResult + ' ₽</span>';
+      var strBasket = 'В корзине ' + countOrderedItems + ' товар' + plural(countOrderedItems, ['', 'а', 'ов']) + ' на ' + priceResult + '₽';
+      domHeaderBasket.textContent = strBasket;
+      domOrderTotalContent.innerHTML = 'Итого за ' + countOrderedItems + ' товар' + plural(countOrderedItems, ['', 'а', 'ов']) + ': <span class="goods__price">' + priceResult + ' ₽</span>';
     } else {
-      docHeaderBasket.innerText = 'В корзине ничего нет';
-      docOrderTotal.innerHTML = 'Итого за 0 товаров: <span class="goods__price">0 ₽</span>';
+      domHeaderBasket.textContent = 'В корзине ничего нет';
+      domOrderTotalContent.innerHTML = 'Итого за 0 товаров: <span class="goods__price">0 ₽</span>';
     }
   }
 
@@ -224,9 +237,8 @@
     if (productsArray[id].amount > 0) {
       productsArray[id].amount--;
       return true;
-    } else {
-      return false;
     }
+    return false;
   }
 
   function checkAndInsertOrder(id) {
@@ -243,21 +255,15 @@
     renderCardsCart(productsOrderedArr);
   }
 
-  var buttonsFavorite = document.querySelectorAll('.card__btn-favorite');
-  buttonsFavorite.forEach(function (button) {
-    button.addEventListener('click', function (evt) {
-      evt.target.classList.toggle('card__btn-favorite--selected');
-    });
-  });
-
   // работа с корзиной
   function manageOrderedProducts() {
-    var orderedProducts = document.querySelectorAll('article.goods_card.card-order');
+    var orderedProducts = domCartCards.querySelectorAll('article.goods_card.card-order');
     if (orderedProducts && orderedProducts.length > 0) {
       orderedProducts.forEach(function (product) {
         product.addEventListener('click', function (evt) {
           var targetProductId = product.dataset.cartproductid;
           if (evt.target.classList.contains('card-order__close')) {
+            evt.preventDefault();
             // нажали на крестик, удаляем объект из массива и перерисовываем
             delete productsOrderedArr[targetProductId];
             renderCardsCart(productsOrderedArr);
@@ -285,30 +291,33 @@
 
   // работа с формой заказа
   function manageOrderForm() {
-    var domOrderForm = document.querySelector('section.order');
-    domOrderForm.addEventListener('click', function (evt) {
+    domFormOrder.addEventListener('click', function (evt) {
       var evtTarget = evt.target;
       // если переключились на наличные, блокируем инпуты кредитки и обратно
       if (evtTarget.getAttribute('id') === 'payment__card' || evtTarget.getAttribute('id') === 'payment__cash') {
-        var Card = {
-          Number: domOrderForm.querySelector('input[name=card-number]'),
-          Date: domOrderForm.querySelector('input[name=card-date]'),
-          Cvc: domOrderForm.querySelector('input[name=card-cvc]'),
-          Holder: domOrderForm.querySelector('input[name=cardholder]')
+        var сard = {
+          number: domFormOrder.querySelector('input[name=card-number]'),
+          date: domFormOrder.querySelector('input[name=card-date]'),
+          cvc: domFormOrder.querySelector('input[name=card-cvc]'),
+          holder: domFormOrder.querySelector('input[name=cardholder]')
         };
-        for (var field in Card) {
-          if (Card[field].disabled && !domOrderForm.querySelector('input#payment__cash').checked) {
-            Card[field].disabled = false;
-          } else if (domOrderForm.querySelector('input#payment__cash').checked) {
-            Card[field].disabled = true;
+        for (var field in сard) {
+          if (сard[field].disabled && !domFormOrder.querySelector('input#payment__cash').checked) {
+            сard[field].disabled = false;
+            domCashWrap.classList.add('visually-hidden');
+            domCardWrap.classList.remove('visually-hidden');
+          } else if (domFormOrder.querySelector('input#payment__cash').checked) {
+            сard[field].disabled = true;
+            domCashWrap.classList.remove('visually-hidden');
+            domCardWrap.classList.add('visually-hidden');
           }
         }
       }
       // переключатель табов доставки
       if (evtTarget.getAttribute('id') === 'deliver__courier' || evtTarget.getAttribute('id') === 'deliver__store') {
-        var domDeliveryStore = domOrderForm.querySelector('.deliver__store');
-        var domDeliveryCourier = domOrderForm.querySelector('.deliver__courier');
-        var activeDeliveryTab = domOrderForm.querySelector('.' + evtTarget.getAttribute('id'));
+        var domDeliveryStore = domFormOrder.querySelector('.deliver__store');
+        var domDeliveryCourier = domFormOrder.querySelector('.deliver__courier');
+        var activeDeliveryTab = domFormOrder.querySelector('.' + evtTarget.getAttribute('id'));
         if (activeDeliveryTab.isEqualNode(domDeliveryCourier)) {
           domDeliveryStore.classList.add('visually-hidden');
           domDeliveryCourier.classList.remove('visually-hidden');
@@ -333,6 +342,48 @@
     });
   }
 
+  function validateOrderForm() {
+    domInputEmail.addEventListener('keyup', function () {
+      if (domInputEmail.value) {
+        domInputEmail.type = 'email';
+        domInputEmail.required = true;
+      } else {
+        domInputEmail.type = 'text';
+        domInputEmail.required = false;
+      }
+    });
+
+    domInputCardNumber.addEventListener('keyup', function () {
+      if (domInputCardNumber.value.length === 16) {
+        if (!luhnFilter(domInputCardNumber.value)) {
+          domInputCardNumber.setCustomValidity('Неправильно указан номер карты');
+        }
+      } else {
+        domInputCardNumber.setCustomValidity('');
+      }
+    });
+    var domInputsCard = domCardWrap.querySelectorAll('input[type=text]');
+    var totalInputs = domInputsCard.length;
+    // вешаем события на каждый инпут и при смене фокуса проверяем валидность всех нужных инпутов
+    domInputsCard.forEach(function (item) {
+      item.addEventListener('blur', function () {
+        var validFlag = 0;
+        domInputsCard.forEach(function (input) { // eslint-disable-line
+          if (input.validity.valid) {
+            validFlag++;
+          } else {
+            validFlag--;
+          }
+        });
+        if (validFlag === totalInputs) {
+          domCardStatusMessage.textContent = 'Одобрен';
+        } else {
+          domCardStatusMessage.textContent = 'Не определён';
+        }
+      });
+    });
+  }
+
   // start
   /**
    * Алгоритм добавления/удаления из корзины будет следующий:
@@ -346,10 +397,19 @@
 
   renderCards(productsArray);
 
-  // эвенты добавть в корзину
-  var buttonsOrder = document.querySelectorAll('.card__btn');
+  // эвенты
+  var buttonsFavorite = domCatalogCards.querySelectorAll('.card__btn-favorite');
+  buttonsFavorite.forEach(function (button) {
+    button.addEventListener('click', function (evt) {
+      evt.preventDefault();
+      evt.target.classList.toggle('card__btn-favorite--selected');
+    });
+  });
+
+  var buttonsOrder = domCatalogCards.querySelectorAll('.card__btn');
   buttonsOrder.forEach(function (button) {
     button.addEventListener('click', function (evt) {
+      evt.preventDefault();
       // получаем дом объект нажатого товара и вытаскиваем id товара для поиска и манипуляций в js объектах
       var targetProductId = evt.path[3].dataset.productid;
       if (targetProductId) {
@@ -367,6 +427,6 @@
 
   manageOrderForm();
   manageFilters();
-
+  validateOrderForm();
 
 })();

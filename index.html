@@ -144,7 +144,7 @@
     <section class="buy">
       <h2 class="visually-hidden">Оформление покупки</h2>
 
-      <form action="/" method="post">
+      <form action="https://js.dump.academy/candyshop" method="post" name="order" type="multipart/form-data">
         <section class="goods">
           <div class="goods__wrap container">
             <h2 class="group-title goods__title" id="basket">Твои покупки</h2>
@@ -215,24 +215,24 @@
                 <div class="payment__inputs">
                   <div class="payment__card-group">
                     <p class="text-input text-input--light payment__input-wrap payment__input-wrap--card-number">
-                      <input type="text" class="text-input__input" name="card-number" id="payment__card-number" placeholder="Номер карты" pattern="^[0-9]{16}$">
+                      <input type="text" class="text-input__input" name="card-number" id="payment__card-number" placeholder="Номер карты" maxlength="16" minlength="16" required>
                       <label class="text-input__label" for="payment__card-number">Номер карты</label>
                     </p>
 
                     <p class="text-input text-input--light payment__input-wrap payment__input-wrap--card-date">
-                      <input type="text" class="text-input__input" name="card-date" id="payment__card-date" placeholder="мм/гг">
+                      <input type="text" class="text-input__input" name="card-date" id="payment__card-date" placeholder="мм/гг" pattern="^\d{2}\/\d{2}" maxlength="5" required>
                       <label class="text-input__label" for="payment__card-date">мм/гг</label>
                     </p>
 
                     <p class="text-input text-input--light payment__input-wrap payment__input-wrap--cvc">
-                      <input type="text" class="text-input__input" name="card-cvc" id="payment__card-cvc" placeholder="CVC">
+                      <input type="text" class="text-input__input" name="card-cvc" id="payment__card-cvc" placeholder="CVC" minlength="3" maxlength="3" min="100" max="999" required>
                       <label class="text-input__label text-input__label--lock" for="payment__card-cvc">CVC</label>
                     </p>
 
                   </div>
                   <div class="payment__cardholder-group">
                     <p class="text-input text-input--light payment__input-wrap payment__input-wrap--cardholder">
-                      <input type="text" class="text-input__input" name="cardholder" id="payment__cardholder" placeholder="ИМЯ ДЕРЖАТЕЛЯ">
+                      <input type="text" class="text-input__input" name="cardholder" id="payment__cardholder" placeholder="ИМЯ ДЕРЖАТЕЛЯ" required pattern="^[aA-zZ]*. [aA-zZ]+$">
                       <label class="text-input__label" for="payment__cardholder">ИМЯ ДЕРЖАТЕЛЯ</label>
                     </p>
 
