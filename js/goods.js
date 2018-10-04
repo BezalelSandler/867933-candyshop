@@ -16,8 +16,11 @@
 
   var domFormOrder = document.querySelector('form[name=order]');
   var domSectionOrder = domFormOrder.querySelector('section.order');
+  var domCashWrap = domFormOrder.querySelector('.payment__cash-wrap');
+  var domCardWrap = domFormOrder.querySelector('.payment__card-wrap');
   var domInputEmail = domFormOrder.querySelector('input[name=email]');
   var domInputCardNumber = domFormOrder.querySelector('input[name=card-number]');
+  var domCardStatusMessage = domFormOrder.querySelector('.payment__card-status');
 
   var domSubmitOrder = document.querySelector('.buy__submit-btn-wrap.container');
 
@@ -288,7 +291,6 @@
 
   // работа с формой заказа
   function manageOrderForm() {
-    var domCashWrap = domFormOrder.querySelector('.payment__cash-wrap');
     domFormOrder.addEventListener('click', function (evt) {
       var evtTarget = evt.target;
       // если переключились на наличные, блокируем инпуты кредитки и обратно
@@ -303,9 +305,11 @@
           if (сard[field].disabled && !domFormOrder.querySelector('input#payment__cash').checked) {
             сard[field].disabled = false;
             domCashWrap.classList.add('visually-hidden');
+            domCardWrap.classList.remove('visually-hidden');
           } else if (domFormOrder.querySelector('input#payment__cash').checked) {
             сard[field].disabled = true;
             domCashWrap.classList.remove('visually-hidden');
+            domCardWrap.classList.add('visually-hidden');
           }
         }
       }
@@ -357,6 +361,26 @@
       } else {
         domInputCardNumber.setCustomValidity('');
       }
+    });
+    var domInputsCard = domCardWrap.querySelectorAll('input[type=text]');
+    var totalInputs = domInputsCard.length;
+    // вешаем события на каждый инпут и при смене фокуса проверяем валидность всех нужных инпутов
+    domInputsCard.forEach(function (item) {
+      item.addEventListener('blur', function () {
+        var validFlag = 0;
+        domInputsCard.forEach(function (input) { // eslint-disable-line
+          if (input.validity.valid) {
+            validFlag++;
+          } else {
+            validFlag--;
+          }
+        });
+        if (validFlag === totalInputs) {
+          domCardStatusMessage.textContent = 'Одобрен';
+        } else {
+          domCardStatusMessage.textContent = 'Не определён';
+        }
+      });
     });
   }
 
