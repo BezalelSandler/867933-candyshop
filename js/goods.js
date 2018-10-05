@@ -295,19 +295,19 @@
       var evtTarget = evt.target;
       // если переключились на наличные, блокируем инпуты кредитки и обратно
       if (evtTarget.getAttribute('id') === 'payment__card' || evtTarget.getAttribute('id') === 'payment__cash') {
-        var сard = {
+        var card = {
           number: domFormOrder.querySelector('input[name=card-number]'),
           date: domFormOrder.querySelector('input[name=card-date]'),
           cvc: domFormOrder.querySelector('input[name=card-cvc]'),
           holder: domFormOrder.querySelector('input[name=cardholder]')
         };
-        for (var field in сard) {
-          if (сard[field].disabled && !domFormOrder.querySelector('input#payment__cash').checked) {
-            сard[field].disabled = false;
+        for (var field in card) {
+          if (card[field].disabled && !domFormOrder.querySelector('input#payment__cash').checked) {
+            card[field].disabled = false;
             domCashWrap.classList.add('visually-hidden');
             domCardWrap.classList.remove('visually-hidden');
           } else if (domFormOrder.querySelector('input#payment__cash').checked) {
-            сard[field].disabled = true;
+            card[field].disabled = true;
             domCashWrap.classList.remove('visually-hidden');
             domCardWrap.classList.add('visually-hidden');
           }
