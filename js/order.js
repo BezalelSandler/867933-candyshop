@@ -83,4 +83,39 @@
       });
     });
   };
+
+  window.order.submitForm = function () {
+    var form = window.dom.formOrder;
+    form.addEventListener('submit', function (evt) {
+      evt.preventDefault();
+
+      var showHideModal = function (classElement, message) {
+        message = message || false;
+        var modal = document.querySelector('.modal.' + classElement);
+        modal.classList.remove('modal--hidden');
+        if (message) {
+          modal.querySelector('.modal__message').textContent = message;
+        }
+        modal.querySelector('button.modal__close').addEventListener('click', function () {
+          modal.classList.add('modal--hidden');
+        });
+      };
+
+      window.backend.save(
+          function () {
+            // onLoad
+            form.reset();
+            showHideModal('modal--success');
+            // возвращаем табы по дефаулту
+            window.dom.cardWrap.classList.remove('visually-hidden');
+            window.dom.cashWrap.classList.add('visually-hidden');
+          },
+          function (message) {
+            // onError
+            showHideModal('modal--error', message);
+          },
+          new FormData(form)
+      );
+    });
+  };
 })();

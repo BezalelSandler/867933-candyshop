@@ -5,37 +5,38 @@
   var utils = window.utils;
   window.data = {};
 
-  var mockContainer = {
-    name: ['Чесночные сливки', 'Огуречный педант', 'Молочная хрюша', 'Грибной шейк', 'Баклажановое безумие', 'Паприколу итальяно', 'Нинзя-удар васаби', 'Хитрый баклажан', 'Горчичный вызов', 'Кедровая липучка', 'Корманный портвейн', 'Чилийский задира', 'Беконовый взрыв', 'Арахис vs виноград', 'Сельдерейная душа', 'Початок в бутылке', 'Чернющий мистер чеснок', 'Раша федераша', 'Кислая мина', 'Кукурузное утро', 'Икорный фуршет', 'Новогоднее настроение', 'С пивком потянет', 'Мисс креветка', 'Бесконечный взрыв', 'Невинные винные', 'Бельгийское пенное', 'Острый язычок'
-    ],
-    picture: ['gum-cedar.jpg', 'gum-chile.jpg', 'gum-eggplant.jpg', 'gum-mustard.jpg', 'gum-portwine.jpg', 'gum-wasabi.jpg', 'ice-cucumber.jpg', 'ice-eggplant.jpg', 'ice-garlic.jpg', 'ice-italian.jpg', 'ice-mushroom.jpg', 'ice-pig.jpg', 'marmalade-beer.jpg', 'marmalade-caviar.jpg', 'marmalade-corn.jpg', 'marmalade-new-year.jpg', 'marmalade-sour.jpg', 'marshmallow-bacon.jpg', 'marshmallow-beer.jpg', 'marshmallow-shrimp.jpg', 'marshmallow-spicy.jpg', 'marshmallow-wine.jpg', 'soda-bacon.jpg', 'soda-celery.jpg', 'soda-cob.jpg', 'soda-garlic.jpg', 'soda-peanut-grapes.jpg', 'soda-russian.jpg'],
-    sugar: [false, true],
-    contents: ['молоко', 'сливки', 'вода', 'пищевой краситель', 'патока', 'ароматизатор бекона', 'ароматизатор свинца', 'ароматизатор дуба, идентичный натуральному', 'ароматизатор картофеля', 'лимонная кислота', 'загуститель', 'эмульгатор', 'консервант: сорбат калия', 'посолочная смесь: соль, нитрит натрия', 'ксилит', 'карбамид', 'вилларибо', 'виллабаджо']
-  };
-
-  window.data.generateMockObjects = function () {
-    var MAX_GOODS = 26;
-    var arrGoods = [];
-    for (var i = 0; i < MAX_GOODS; i++) {
-      arrGoods[i] = {
-        productId: i,
-        name: mockContainer.name[utils.getRandElement(mockContainer.name)],
-        picture: mockContainer.picture[utils.getRandElement(mockContainer.picture)],
-        amount: utils.getRandValue(0, 20),
-        price: utils.getRandValue(100, 1500),
-        weight: utils.getRandValue(30, 300),
-        rating: {
-          number: utils.getRandValue(10, 900),
-          value: utils.getRandValue(1, 5)
+  window.data.generateProducts = function (onResult) {
+    window.backend.load(
+        function (response) {
+        // onLoad
+          var arrGoods = [];
+          if (typeof response === 'object') {
+            for (var i = 0; i < response.length; i++) {
+              arrGoods[i] = {
+                productId: i,
+                name: response[i].name,
+                picture: response[i].picture,
+                amount: response[i].amount,
+                price: response[i].price,
+                weight: response[i].weight,
+                rating: {
+                  number: response[i].rating.number,
+                  value: response[i].rating.value
+                },
+                nutritionFacts: {
+                  sugar: response[i].nutritionFacts.sugar,
+                  energy: response[i].nutritionFacts.energy,
+                  contents: response[i].nutritionFacts.contents
+                }
+              };
+            }
+          }
+          onResult(arrGoods);
         },
-        nutritionFacts: {
-          sugar: mockContainer.sugar[utils.getRandElement(mockContainer.sugar)],
-          energy: utils.getRandValue(70, 500),
-          contents: utils.getRandElements(mockContainer.contents, 7)
-        }
-      };
-    }
-    return arrGoods;
+        function (response) {
+        // onError
+          alert(response); // eslint-disable-line
+        });
   };
 
   window.data.renderCards = function (products) {
