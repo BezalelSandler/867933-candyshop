@@ -11,7 +11,7 @@
     // эвенты
     var buttonsFavorite = window.dom.catalogCards.querySelectorAll('.card__btn-favorite');
     buttonsFavorite.forEach(function (button) {
-      button.addEventListener('click', function (evt) {
+      button.addEventListener('click', function (evt) { // eslint-disable-line
         evt.preventDefault();
         evt.target.classList.toggle('card__btn-favorite--selected');
       });
@@ -19,7 +19,7 @@
 
     var buttonsOrder = window.dom.catalogCards.querySelectorAll('.card__btn');
     buttonsOrder.forEach(function (button) {
-      button.addEventListener('click', function (evt) {
+      button.addEventListener('click', function (evt) { // eslint-disable-line
         evt.preventDefault();
         // получаем дом объект нажатого товара и вытаскиваем id товара для поиска и манипуляций в js объектах
         var targetProductId = evt.path[3].dataset.productid;
