@@ -23,6 +23,16 @@
   dom.inputCardNumber = dom.formOrder.querySelector('input[name=card-number]');
   dom.cardStatusMessage = dom.formOrder.querySelector('.payment__card-status');
 
+  // Filters
+  dom.sidebarFilter = document.querySelector('aside.catalog__sidebar');
+  dom.sliderRange = dom.sidebarFilter.querySelector('.range__filter');
+  dom.sliderMin = dom.sidebarFilter.querySelector('button.range__btn--left');
+  dom.sliderMax = dom.sidebarFilter.querySelector('button.range__btn--right');
+  dom.sliderFill = dom.sidebarFilter.querySelector('.range__fill-line');
+  dom.sliderPriceMin = dom.sidebarFilter.querySelector('.range__price.range__price--min');
+  dom.sliderPriceMax = dom.sidebarFilter.querySelector('.range__price.range__price--max');
+  dom.filterInputs = dom.sidebarFilter.querySelectorAll('.input-btn__input');
+
   window.dom = dom;
 
 })();

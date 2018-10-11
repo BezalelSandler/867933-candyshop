@@ -5,6 +5,8 @@
   window.data.generateProducts(function (productsArray) {
     window.productsOrderedArr = [];
     window.productsArray = productsArray;
+    // для фильтров
+    window.bufferArray = Object.assign([], window.productsArray);
 
     window.data.renderCards(productsArray);
 

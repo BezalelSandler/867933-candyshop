@@ -16,6 +16,7 @@
                 productId: i,
                 name: response[i].name,
                 picture: response[i].picture,
+                kind: response[i].kind,
                 amount: response[i].amount,
                 price: response[i].price,
                 weight: response[i].weight,
