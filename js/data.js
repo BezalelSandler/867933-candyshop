@@ -27,7 +27,9 @@
                 nutritionFacts: {
                   sugar: response[i].nutritionFacts.sugar,
                   energy: response[i].nutritionFacts.energy,
-                  contents: response[i].nutritionFacts.contents
+                  contents: response[i].nutritionFacts.contents,
+                  vegetarian: response[i].nutritionFacts.vegetarian,
+                  gluten: response[i].nutritionFacts.vegetarian
                 }
               };
             }

@@ -57,6 +57,9 @@
   window.dom.filterInputs.forEach(function (input) {
     input.addEventListener('click', function (evt) {
       if (window.bufferArray) {
+        // делим фильтры на группы
+        // главная - Типы товаров - использует копию основного объекта
+        // вторая - Содержание - для фильтрации использует объект главной группы
         /* если тыкнули по инпуту, получаем из исходного объекта массив по этому фильтру
            накладываем (мапируем) на буфферный массив, если такие объекты там есть, удаляем из буффера,
            если их нет, добавляем в буффер
@@ -64,33 +67,64 @@
         var filterLabel = evt.target.parentNode.childNodes[3].textContent;
         var filterChecked = evt.target.checked;
         var filterIds = [];
-        var filterTypeArr = window.productsArray.filter(function (it) { // eslint-disable-line
-          if (it.kind === filterLabel) {
-            filterIds.push(it.productId);
-            return it;
-          }
-        });
-        var filterNutritionFactsArr = window.productsArray.filter(function (it) { // eslint-disable-line
-          if (evt.target.value === 'sugar-free') {
-            if (it.nutritionFacts.sugar === false) {
+
+        var filterTypes = function () {
+          var filterTypeArr = window.productsArray.filter(function (it) { // eslint-disable-line
+            if (it.kind === filterLabel) {
               filterIds.push(it.productId);
               return it;
             }
-          }
-        });
-        if (filterChecked) {
-          // добавляем
-          window.buffer = window.buffer.concat(filterTypeArr);
-        } else {
-          // удаляем
-          window.buffer = window.buffer.filter(function (item) { // eslint-disable-line
-            if (filterIds.indexOf(item.productId) === -1) {
-              return item;
-            }
           });
-        }
-        //console.log(filterIds);
-        console.log(window.buffer);
+          if (filterChecked) {
+            // добавляем
+            window.buffer = window.buffer.concat(filterTypeArr);
+            window.buffer = window.buffer.filter(function (it, i) { // eslint-disable-line
+              return window.buffer.indexOf(it) === i;
+            });
+          } else {
+            // удаляем
+            return window.buffer.filter(function (item) { // eslint-disable-line
+              if (filterIds.indexOf(item.productId) === -1) {
+                return item;
+              }
+            });
+          }
+        };
+
+        var filterContent = function () {
+          // поскольку для фильтров нет сопоставлений кнопки и объекта, прописываем их хардкодом
+          var filterNutrition = function (it) { // eslint-disable-line
+            if (filterLabel === 'Без сахара' && it.nutritionFacts.sugar === false) {
+              filterIds.push(it.productId);
+              return it;
+            }
+            if (filterLabel === 'Вегетарианское' && it.nutritionFacts.vegetarian === true) {
+              filterIds.push(it.productId);
+              return it;
+            }
+            if (filterLabel === 'Безглютеновое' && it.nutritionFacts.vegetarian === true) {
+              filterIds.push(it.productId);
+              return it;
+            }
+          };
+
+          var filterNutritionArr = function () {
+            // фильтрация по содержанию если буферный объект пустой, берем из исходного, если не пустой, фильтруем по буферу
+            if (window.buffer.length > 0) {
+              return window.buffer.filter(function (it) {
+                return filterNutrition(it);
+              });
+            } else {
+              return window.productsArray.filter(function (it) {
+                return filterNutrition(it);
+              });
+            }
+          };
+        };
+
+        window.buffer = filterTypes();
+
+        //console.log(window.buffer);
       }
     });
   });
