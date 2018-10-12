@@ -185,6 +185,10 @@
         window.buffer.forEach(function (it, ind) {
           it.productId = ind;
         });
+        // reset восстановление каталога если все чекеты сняты, но нижний всегда чекнутый
+        if (window.buffer.length === 0 && checkeds.length === 1) {
+          window.buffer = Object.assign([], window.productsArray);
+        }
         window.data.renderCards(window.buffer);
         window.filter.renderCounts(window.buffer);
       }
