@@ -6,9 +6,10 @@
     window.productsOrderedArr = [];
     window.productsArray = productsArray;
     // для фильтров
-    window.bufferArray = Object.assign([], window.productsArray);
+    window.buffer = Object.assign({}, productsArray);
 
     window.data.renderCards(productsArray);
+    window.filter.renderCounts(productsArray);
 
     // эвенты
     var buttonsFavorite = window.dom.catalogCards.querySelectorAll('.card__btn-favorite');
@@ -16,6 +17,7 @@
       button.addEventListener('click', function (evt) { // eslint-disable-line
         evt.preventDefault();
         evt.target.classList.toggle('card__btn-favorite--selected');
+        // вносим в объект и перерисовываем счетчики
       });
     });
 

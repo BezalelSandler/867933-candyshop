@@ -2,8 +2,9 @@
 
 (function () {
   var MAX_WIDTH = window.dom.sliderRange.offsetWidth;
+  window.filter = {};
 
-  function onMouseDown(evtDown) {
+  var onMouseDown = function (evtDown) {
     var startCoord = {
       x: evtDown.clientX
     };
@@ -47,84 +48,141 @@
     document.addEventListener('mousemove', onMouseMove);
     document.addEventListener('mouseup', onMouseUp);
 
-  }
+  };
+
+  window.filter.renderCounts = function (productsArray) {
+    // тут немного рукожопский подход, а как по другому сделать, пока не очень понимаю
+    // по идее нужна какая то структура данных или чтобы из сгенерированной сервером страницы можно было вытащить какие то аттрибуты для сопоставления
+    var countersList = window.dom.sidebarFilter.querySelectorAll('li.input-btn,p.range__price-count');
+    var count;
+    if (countersList) {
+      for (var i = 0; i < countersList.length; i++) {
+        var spanCounter = countersList[i].querySelector('span');
+        if (countersList[i].childNodes[1].nodeName === 'INPUT' || countersList[i].childNodes[1].nodeName === 'SPAN') {
+          var inputValue = countersList[i].childNodes[1].value;
+          var spanText = countersList[i].childNodes[1];
+          // куча повторяющегося кода, но времени не было весь этот трешак структурировать
+          if (inputValue === 'icecream') {
+            count = productsArray.filter(function (it) {
+              return it.kind === 'Мороженое';
+            }).length;
+            spanCounter.textContent = '(' + count + ')';
+          }
+          if (inputValue === 'soda') {
+            count = productsArray.filter(function (it) {
+              return it.kind === 'Газировка';
+            }).length;
+            spanCounter.textContent = '(' + count + ')';
+          }
+          if (inputValue === 'gum') {
+            count = productsArray.filter(function (it) {
+              return it.kind === 'Жевательная резинка';
+            }).length;
+            spanCounter.textContent = '(' + count + ')';
+          }
+          if (inputValue === 'marmalade') {
+            count = productsArray.filter(function (it) {
+              return it.kind === 'Мармелад';
+            }).length;
+            spanCounter.textContent = '(' + count + ')';
+          }
+          if (inputValue === 'marshmallows') {
+            count = productsArray.filter(function (it) {
+              return it.kind === 'Зефир';
+            }).length;
+            spanCounter.textContent = '(' + count + ')';
+          }
+          if (inputValue === 'sugar-free') {
+            count = productsArray.filter(function (it) {
+              return it.nutritionFacts.sugar === false;
+            }).length;
+            spanCounter.textContent = '(' + count + ')';
+          }
+          if (inputValue === 'vegetarian') {
+            count = productsArray.filter(function (it) {
+              return it.nutritionFacts.vegetarian === true;
+            }).length;
+            spanCounter.textContent = '(' + count + ')';
+          }
+          if (inputValue === 'gluten-free') {
+            count = productsArray.filter(function (it) {
+              return it.nutritionFacts.gluten === false;
+            }).length;
+            spanCounter.textContent = '(' + count + ')';
+          }
+          // счетчик над слайдером, считает весь массив
+          if (countersList[i].childNodes[1].classList.contains('range__count')) {
+            count = productsArray.length;
+            spanText.textContent = '(' + count + ')';
+          }
+          if (inputValue === 'favorite') {
+            count = productsArray.filter(function (it) {
+              return it.favorite !== 0;
+            }).length;
+            spanCounter.textContent = '(' + count + ')';
+          }
+          if (inputValue === 'availability') {
+            count = productsArray.filter(function (it) {
+              return it.amount !== 0;
+            }).length;
+            spanCounter.textContent = '(' + count + ')';
+          }
+        }
+      }
+    }
+  };
 
   window.dom.sliderMin.addEventListener('mousedown', onMouseDown);
   window.dom.sliderMax.addEventListener('mousedown', onMouseDown);
 
-  window.buffer = [];
-
   window.dom.filterInputs.forEach(function (input) {
-    input.addEventListener('click', function (evt) {
-      if (window.bufferArray) {
-        // делим фильтры на группы
-        // главная - Типы товаров - использует копию основного объекта
-        // вторая - Содержание - для фильтрации использует объект главной группы
-        /* если тыкнули по инпуту, получаем из исходного объекта массив по этому фильтру
-           накладываем (мапируем) на буфферный массив, если такие объекты там есть, удаляем из буффера,
-           если их нет, добавляем в буффер
-        */
-        var filterLabel = evt.target.parentNode.childNodes[3].textContent;
-        var filterChecked = evt.target.checked;
-        var filterIds = [];
-
-        var filterTypes = function () {
-          var filterTypeArr = window.productsArray.filter(function (it) { // eslint-disable-line
-            if (it.kind === filterLabel) {
-              filterIds.push(it.productId);
-              return it;
-            }
-          });
-          if (filterChecked) {
-            // добавляем
-            window.buffer = window.buffer.concat(filterTypeArr);
-            window.buffer = window.buffer.filter(function (it, i) { // eslint-disable-line
-              return window.buffer.indexOf(it) === i;
-            });
-          } else {
-            // удаляем
-            return window.buffer.filter(function (item) { // eslint-disable-line
-              if (filterIds.indexOf(item.productId) === -1) {
-                return item;
-              }
-            });
+    input.addEventListener('click', function () {
+      if (window.buffer) {
+        // дабы не городить огород, алгоритм следующий:
+        // при клике на инпуте, проверяется состояние всех чекбоксов
+        // заносятся в переменную и при формировании фильтра будут участвовать в условиях выдачи
+        // фильтром формируется буферный объект из исходного
+        var checkeds = [];
+        for (var i = 0; i < window.dom.filterInputs.length; i++) {
+          if (window.dom.filterInputs[i].checked) {
+            checkeds = checkeds.concat(window.dom.filterInputs[i].value);
           }
-        };
-
-        var filterContent = function () {
-          // поскольку для фильтров нет сопоставлений кнопки и объекта, прописываем их хардкодом
-          var filterNutrition = function (it) { // eslint-disable-line
-            if (filterLabel === 'Без сахара' && it.nutritionFacts.sugar === false) {
-              filterIds.push(it.productId);
-              return it;
-            }
-            if (filterLabel === 'Вегетарианское' && it.nutritionFacts.vegetarian === true) {
-              filterIds.push(it.productId);
-              return it;
-            }
-            if (filterLabel === 'Безглютеновое' && it.nutritionFacts.vegetarian === true) {
-              filterIds.push(it.productId);
-              return it;
-            }
-          };
-
-          var filterNutritionArr = function () {
-            // фильтрация по содержанию если буферный объект пустой, берем из исходного, если не пустой, фильтруем по буферу
-            if (window.buffer.length > 0) {
-              return window.buffer.filter(function (it) {
-                return filterNutrition(it);
-              });
-            } else {
-              return window.productsArray.filter(function (it) {
-                return filterNutrition(it);
-              });
-            }
-          };
-        };
-
-        window.buffer = filterTypes();
-
-        //console.log(window.buffer);
+        }
+        // поскольку у чекбоксов и объекта нет явного сопоставления значений, делаю хардкодом
+        // не уверен что так правильно, делаю по типу формирования sql запроса в бд))
+        window.buffer = productsArray.filter(function (item) { // eslint-disable-line
+          var resStr = '';
+          // Блок типов товара
+          if (checkeds.indexOf('icecream') !== -1) { // тыкнули на Мороженое
+            resStr = 'item.kind === "Мороженое"';
+          }
+          if (checkeds.indexOf('soda') !== -1) { // тыкнули на Газировка и т.д.
+            resStr += (resStr ? ' || ' : '') + ' item.kind === "Газировка"';
+          }
+          if (checkeds.indexOf('gum') !== -1) {
+            resStr += (resStr ? ' || ' : '') + ' item.kind === "Жевательная резинка"';
+          }
+          if (checkeds.indexOf('marmalade') !== -1) {
+            resStr += (resStr ? ' || ' : '') + ' item.kind === "Мармелад"';
+          }
+          if (checkeds.indexOf('marshmallows') !== -1) {
+            resStr += (resStr ? ' || ' : '') + ' item.kind === "Зефир"';
+          }
+          resStr = resStr ? '(' + resStr + ')' : '';
+          // Блок содержания в товарах
+          if (checkeds.indexOf('sugar-free') !== -1) { // && без сахара
+            resStr += (resStr ? ' && ' : '') + ' item.nutritionFacts.sugar === false';
+          }
+          if (checkeds.indexOf('vegetarian') !== -1) {
+            resStr += (resStr ? ' && ' : '') + ' item.nutritionFacts.vegetarian === true';
+          }
+          if (checkeds.indexOf('gluten-free') !== -1) {
+            resStr += (resStr ? ' && ' : '') + ' item.nutritionFacts.gluten === false';
+          }
+          return eval(resStr); // eslint-disable-line
+        });
+        window.data.renderCards(window.buffer);
+        window.filter.renderCounts(window.buffer);
       }
     });
   });

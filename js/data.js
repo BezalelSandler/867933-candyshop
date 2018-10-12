@@ -20,6 +20,7 @@
                 amount: response[i].amount,
                 price: response[i].price,
                 weight: response[i].weight,
+                favorite: 0,
                 rating: {
                   number: response[i].rating.number,
                   value: response[i].rating.value
@@ -34,6 +35,13 @@
               };
             }
           }
+          // сортировка если галка по умолчанию популярные
+          var popularDefault = window.dom.sidebarFilter.querySelector('#filter-popular').checked;
+          if (popularDefault) {
+            arrGoods.sort(function (left, right) {
+              return right.rating.number - left.rating.number;
+            });
+          }
           onResult(arrGoods);
         },
         function (response) {
@@ -45,7 +53,6 @@
   window.data.renderCards = function (products) {
     if (dom.catalogCards) {
       dom.catalogCards.classList.remove('catalog__cards--load');
-      dom.catalogCards.querySelector('.catalog__load').classList.add('visually-hidden');
     }
 
     var cardNode = dom.fragmentCardTemplate.content;
@@ -90,6 +97,9 @@
       cardNode.querySelector('.card__composition-list').textContent = item.nutritionFacts.contents;
       cardsListContainer.appendChild(cardNode.cloneNode(true));
     });
+    // предварительно отчистим блок
+    window.utils.clearChildNodes(dom.catalogCards);
+
     dom.catalogCards.appendChild(cardsListContainer);
   };
 
