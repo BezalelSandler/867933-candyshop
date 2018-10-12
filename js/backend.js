@@ -2,9 +2,9 @@
 
 (function () {
   window.backend = {};
-  var url = {
-    load: 'https://js.dump.academy/candyshop/data',
-    upload: 'https://js.dump.academy/candyshop'
+  var URL = {
+    LOAD: 'https://js.dump.academy/candyshop/data',
+    UPLOAD: 'https://js.dump.academy/candyshop'
   };
   var sendRequest = function (onLoad, onError, data) {
     data = data || false;
@@ -25,9 +25,9 @@
     });
     xhr.timeout = 10000;
     if (data) {
-      xhr.open('POST', url.upload);
+      xhr.open('POST', URL.UPLOAD);
     } else {
-      xhr.open('GET', url.load);
+      xhr.open('GET', URL.LOAD);
     }
     xhr.send(data ? data : '');
   };
