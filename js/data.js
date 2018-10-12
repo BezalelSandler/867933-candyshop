@@ -35,13 +35,11 @@
               };
             }
           }
-          // сортировка если галка по умолчанию популярные
           var popularDefault = window.dom.sidebarFilter.querySelector('#filter-popular').checked;
           if (popularDefault) {
             arrGoods.sort(function (left, right) {
               return right.rating.number - left.rating.number;
             });
-            // финт ушами, нужно id поменять из индекса т.к. раньше это использовалось во всей логике
             arrGoods.forEach(function (it, ind) {
               it.productId = ind;
             });
@@ -81,6 +79,8 @@
       cardNode.querySelector('.card__title').textContent = item.name;
       cardNode.querySelector('.card__price').innerHTML = item.price + ' <span class="card__currency">₽</span><span class="card__weight">/ ' + item.weight + ' Г</span>';
       cardNode.querySelector('.card__img').src = 'img/cards/' + item.picture;
+      cardNode.querySelector('.card__btn-favorite').setAttribute('data-favorite', item.favorite);
+      cardNode.querySelector('.card__btn-favorite').setAttribute('data-prodid', item.productId);
 
       var ratingClass = cardNode.querySelector('.stars__rating').classList;
       ratingClass.remove('stars__rating--five');
@@ -101,18 +101,39 @@
       cardNode.querySelector('.card__composition-list').textContent = item.nutritionFacts.contents;
       cardsListContainer.appendChild(cardNode.cloneNode(true));
     });
-    // предварительно отчистим блок
     window.utils.clearChildNodes(dom.catalogCards);
 
     dom.catalogCards.appendChild(cardsListContainer);
 
-    // эвенты
+    var prices = [];
+    window.filter.renderCounts(window.buffer);
+    products.forEach(function (it, i) {
+      prices[i] = it.price;
+    });
+    var min = Math.min.apply(null, prices);
+    var max = Math.max.apply(null, prices);
+    window.dom.sliderRange.querySelector('.range__btn--left').style.left = min + 'px';
+    window.dom.sliderRange.querySelector('.range__btn--right').style.right = max + 'px';
+    window.dom.sliderPriceMin.textContent = min;
+    window.dom.sliderPriceMax.textContent = max;
+    window.dom.sliderFill.style.left = min + 'px';
+    window.dom.sliderFill.style.right = max + 'px';
+
     var buttonsFavorite = window.dom.catalogCards.querySelectorAll('.card__btn-favorite');
     buttonsFavorite.forEach(function (button) {
       button.addEventListener('click', function (evt) { // eslint-disable-line
         evt.preventDefault();
         evt.target.classList.toggle('card__btn-favorite--selected');
-        // вносим в объект и перерисовываем счетчики
+        var targetProductId = evt.target.dataset.prodid;
+        window.buffer.forEach(function (it) {
+          if (it.productId == targetProductId) { // eslint-disable-line
+            if (it.favorite === 1) {
+              it.favorite = 0;
+            } else {
+              it.favorite = 1;
+            }
+          }
+        });
       });
     });
 
@@ -120,13 +141,10 @@
     buttonsOrder.forEach(function (button) {
       button.addEventListener('click', function (evt) { // eslint-disable-line
         evt.preventDefault();
-        // получаем дом объект нажатого товара и вытаскиваем id товара для поиска и манипуляций в js объектах
         var targetProductId = evt.path[3].dataset.productid;
         if (targetProductId) {
           if (window.catalog.checkPriceAndDecreaseAmount(targetProductId)) {
-            // если есть в наличии
             if (!window.catalog.checkAndInsertOrder(targetProductId)) {
-              // вывести алерт
             }
           } else {
             alert('Эти вкусняшки кончились!'); // eslint-disable-line
@@ -137,11 +155,9 @@
   };
 
   window.data.renderCardsCart = function (productsOrdered) {
-    // productsOrdered проверяем на пустые элементы
     var bufferArr = productsOrdered.filter(function (item) {
       return item.hasOwnProperty('name');
     });
-    // в буфер скидываем заглушку т.к. далее все дети будут удалятся перед вставкой
     var bufferNodeEmpty = dom.cartCards.querySelector('.goods__card-empty');
     if (bufferNodeEmpty) {
       bufferNodeEmpty = bufferNodeEmpty.cloneNode(true);
@@ -165,17 +181,14 @@
         priceResult += item.price * item.orderedAmount;
         countOrderedItems += item.orderedAmount;
       });
-      // если уже есть объекты в корзине, удаляем при перерисовке, за исключением заглушки, заглушку в буфер
       utils.clearChildNodes(dom.cartCards);
       cartListContainer.appendChild(bufferNodeEmpty);
 
       dom.cartCards.appendChild(cartListContainer);
 
-      // манипуляции с классами
       dom.cartCards.classList.remove('goods__cards--empty');
       dom.cartCards.querySelector('.goods__card-empty').classList.add('visually-hidden');
       dom.orderTotal.classList.remove('visually-hidden');
-      // убираем скрытие формы заказа, если она скрыта и кнопки отправки
       if (dom.sectionOrder.classList.contains('visually-hidden')) {
         dom.sectionOrder.classList.remove('visually-hidden');
       }
@@ -183,11 +196,9 @@
         dom.submitOrder.classList.remove('visually-hidden');
       }
 
-      // функция управления элементами в корзине
       window.catalog.manageOrderedProducts();
 
     } else {
-      // нет товаров в корзине, чистим дом и возвращаем заглушку
       utils.clearChildNodes(dom.cartCards);
       if (!dom.cartCards.classList.contains('goods__cards--empty')) {
         dom.cartCards.classList.add('goods__cards--empty');
@@ -195,7 +206,6 @@
       dom.cartCards.appendChild(bufferNodeEmpty);
       dom.cartCards.querySelector('.goods__card-empty').classList.remove('visually-hidden');
       dom.orderTotal.classList.add('visually-hidden');
-      // добавляем скрытие формы заказа кнопки отправки
       if (!dom.sectionOrder.classList.contains('visually-hidden')) {
         dom.sectionOrder.classList.add('visually-hidden');
       }
@@ -203,7 +213,6 @@
         dom.submitOrder.classList.add('visually-hidden');
       }
     }
-    // добавляем в шапку и итоговую стоимость при оформлении
     if (priceResult) {
       var strBasket = 'В корзине ' + countOrderedItems + ' товар' + utils.plural(countOrderedItems, ['', 'а', 'ов']) + ' на ' + priceResult + '₽';
       dom.headerBasket.textContent = strBasket;

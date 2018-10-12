@@ -3,6 +3,7 @@
 (function () {
   var MAX_WIDTH = window.dom.sliderRange.offsetWidth;
   window.filter = {};
+  window.filter.shift = [];
 
   var onMouseDown = function (evtDown) {
     var startCoord = {
@@ -21,7 +22,6 @@
           x: evt.clientX
         };
 
-        // устанавливаем диапазоны сдвига и само движение
         if (eventTarget === window.dom.sliderMin) {
           if (window.dom.sliderMin.offsetLeft - shift.x >= 0 && window.dom.sliderMin.offsetLeft - shift.x < (window.dom.sliderMax.offsetLeft - 8)) {
             window.dom.sliderMin.style.left = (window.dom.sliderMin.offsetLeft - shift.x) + 'px';
@@ -35,12 +35,19 @@
             window.dom.sliderPriceMax.innerText = window.dom.sliderMax.offsetLeft - shift.x;
           }
         }
+        window.filter.shift['min'] = window.dom.sliderMin.offsetLeft - shift.x;
+        window.filter.shift['max'] = window.dom.sliderMax.offsetLeft - shift.x;
       }
     }
 
     function onMouseUp(evt) {
       evt.preventDefault();
-
+      if (window.filter.shift) {
+        window.buffer = window.buffer.filter(function (item) {
+          return item.price >= window.filter.shift['min'] && item.price < window.filter.shift['max'];
+        });
+        window.data.renderCards(window.buffer);
+      }
       document.removeEventListener('mousemove', onMouseMove);
       document.removeEventListener('mouseup', onMouseUp);
     }
@@ -51,8 +58,6 @@
   };
 
   window.filter.renderCounts = function (productsArray) {
-    // тут немного рукожопский подход, а как по другому сделать, пока не очень понимаю
-    // по идее нужна какая то структура данных или чтобы из сгенерированной сервером страницы можно было вытащить какие то аттрибуты для сопоставления
     var countersList = window.dom.sidebarFilter.querySelectorAll('li.input-btn,p.range__price-count');
     var count;
     if (countersList) {
@@ -132,24 +137,15 @@
     }
   };
 
-  window.dom.sliderMin.addEventListener('mousedown', onMouseDown);
-  window.dom.sliderMax.addEventListener('mousedown', onMouseDown);
-
   window.dom.filterInputs.forEach(function (input) {
     input.addEventListener('click', function () {
       if (window.buffer) {
-        // дабы не городить огород, алгоритм следующий:
-        // при клике на инпуте, проверяется состояние всех чекбоксов
-        // заносятся в переменную и при формировании фильтра будут участвовать в условиях выдачи
-        // фильтром формируется буферный объект из исходного
         var checkeds = [];
         for (var i = 0; i < window.dom.filterInputs.length; i++) {
           if (window.dom.filterInputs[i].checked) {
             checkeds = checkeds.concat(window.dom.filterInputs[i].value);
           }
         }
-        // поскольку у чекбоксов и объекта нет явного сопоставления значений, делаю хардкодом
-        // не уверен что так правильно, делаю по типу формирования sql запроса в бд))
         window.buffer = productsArray.filter(function (item) { // eslint-disable-line
           var resStr = '';
           // Блок типов товара
@@ -179,13 +175,19 @@
           if (checkeds.indexOf('gluten-free') !== -1) {
             resStr += (resStr ? ' && ' : '') + ' item.nutritionFacts.gluten === false';
           }
+          if (checkeds.indexOf('favorite') !== -1) {
+            window.dom.formFilter.reset();
+            resStr = 'item.favorite === 1';
+          }
+          if (checkeds.indexOf('availability') !== -1) {
+            window.dom.formFilter.reset();
+            resStr = 'item.amount > 0';
+          }
           return eval(resStr); // eslint-disable-line
         });
-        // финт ушами, нужно id поменять из индекса т.к. раньше это использовалось во всей логике
         window.buffer.forEach(function (it, ind) {
           it.productId = ind;
         });
-        // reset восстановление каталога если все чекеты сняты, но нижний всегда чекнутый
         if (window.buffer.length === 0 && checkeds.length === 1) {
           window.buffer = Object.assign([], window.productsArray);
         }
@@ -194,5 +196,8 @@
       }
     });
   });
+
+  window.dom.sliderMin.addEventListener('mousedown', onMouseDown);
+  window.dom.sliderMax.addEventListener('mousedown', onMouseDown);
 
 })();

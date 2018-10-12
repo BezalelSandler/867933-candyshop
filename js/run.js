@@ -6,7 +6,7 @@
     window.productsOrderedArr = [];
     window.productsArray = productsArray;
     // для фильтров
-    window.buffer = Object.assign({}, productsArray);
+    window.buffer = Object.assign([], productsArray);
 
     window.data.renderCards(productsArray);
     window.filter.renderCounts(productsArray);

@@ -24,6 +24,7 @@
   dom.cardStatusMessage = dom.formOrder.querySelector('.payment__card-status');
 
   // Filters
+  dom.formFilter = document.querySelector('form[name=filter]');
   dom.sidebarFilter = document.querySelector('aside.catalog__sidebar');
   dom.sliderRange = dom.sidebarFilter.querySelector('.range__filter');
   dom.sliderMin = dom.sidebarFilter.querySelector('button.range__btn--left');
