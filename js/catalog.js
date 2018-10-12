@@ -22,7 +22,7 @@
             evt.preventDefault();
 
             // нажали на крестик, удаляем объект из массива и восстанавливаем исходный объект и перерисовываем
-            window.productsArray[targetProductId].amount += window.productsOrderedArr[targetProductId].orderedAmount;
+            window.buffer[targetProductId].amount += window.productsOrderedArr[targetProductId].orderedAmount;
             delete window.productsOrderedArr[targetProductId];
             window.data.renderCardsCart(window.productsOrderedArr);
           }
@@ -30,15 +30,15 @@
             // нажали уменьшить, уменьшаем orderedAmount объекта из массива, прибавляем к исходному и перерисовываем
             if (window.productsOrderedArr[targetProductId].orderedAmount > 1) {
               window.productsOrderedArr[targetProductId].orderedAmount--;
-              window.productsArray[targetProductId].amount++;
+              window.buffer[targetProductId].amount++;
             }
             window.data.renderCardsCart(window.productsOrderedArr);
           }
           if (evt.target.classList.contains('card-order__btn--increase')) {
             // аналогично
-            if (window.productsOrderedArr[targetProductId].orderedAmount <= window.productsArray[targetProductId].amount) {
+            if (window.productsOrderedArr[targetProductId].orderedAmount <= window.buffer[targetProductId].amount) {
               window.productsOrderedArr[targetProductId].orderedAmount++;
-              window.productsArray[targetProductId].amount--;
+              window.buffer[targetProductId].amount--;
               window.data.renderCardsCart(window.productsOrderedArr);
             } else {
               alert('А попа не слипнится?) Усе закончилось.'); // eslint-disable-line
@@ -50,7 +50,7 @@
   };
 
   window.catalog.checkPriceAndDecreaseAmount = function (id) {
-    if (window.productsArray[id].amount > 0) {
+    if (window.buffer[id].amount > 0) {
       return true;
     }
     return false;
@@ -60,10 +60,10 @@
     if (window.productsOrderedArr.length > 0 && window.productsOrderedArr[id] && window.productsOrderedArr[id].hasOwnProperty('orderedAmount')) {
       // увеличиваем свойство количества в объекте заказанных товаров
       window.productsOrderedArr[id].orderedAmount++;
-      window.productsArray[id].amount--;
+      window.buffer[id].amount--;
     } else {
       // добавляем объект в массив объектов в корзине
-      window.productsOrderedArr[id] = Object.assign({}, window.productsArray[id]);
+      window.productsOrderedArr[id] = Object.assign({}, window.buffer[id]);
       window.productsOrderedArr[id].orderedAmount = 1;
       // удаляем ненужное свойство которое изменяется в оригинальном объекте, а тут скопировано статичное
       delete window.productsOrderedArr[id].amount;

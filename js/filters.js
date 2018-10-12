@@ -181,6 +181,10 @@
           }
           return eval(resStr); // eslint-disable-line
         });
+        // финт ушами, нужно id поменять из индекса т.к. раньше это использовалось во всей логике
+        window.buffer.forEach(function (it, ind) {
+          it.productId = ind;
+        });
         window.data.renderCards(window.buffer);
         window.filter.renderCounts(window.buffer);
       }
