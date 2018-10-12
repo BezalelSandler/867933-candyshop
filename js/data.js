@@ -145,6 +145,7 @@
         if (targetProductId) {
           if (window.catalog.checkPriceAndDecreaseAmount(targetProductId)) {
             if (!window.catalog.checkAndInsertOrder(targetProductId)) {
+              //
             }
           } else {
             alert('Эти вкусняшки кончились!'); // eslint-disable-line
